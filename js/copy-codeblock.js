@@ -1,1 +1,51 @@
-window.addEventListener("load",()=>{var e=document.querySelectorAll("figure.highlight");e.length&&e.forEach(e=>{let t=document.createElement("div"),l=(t.setAttribute("class","codeblock-copy-wrapper"),null);t.addEventListener("click",e=>{e=e.target.parentElement.querySelector("code");let c="";!function t(e){e.childNodes.forEach(e=>{switch(e.nodeName){case"#text":c+=e.nodeValue;break;case"BR":c+="\n";break;default:t(e)}})}(e),navigator.clipboard.writeText(c.slice(0,-1)).then(()=>{l&&clearTimeout(l),t.classList.add("codeblock-copy-wrapper-copied"),l=setTimeout(()=>{t.classList.remove("codeblock-copy-wrapper-copied"),l=null},1500)})}),e.appendChild(t)})});
+window.addEventListener('load', () => {
+    const codeBlocks = document.querySelectorAll('figure.highlight');
+    if (!codeBlocks.length) return;
+
+    const addCopyButton = codeBlock => {
+        const copyWrapper = document.createElement('div');
+        copyWrapper.setAttribute('class', 'codeblock-copy-wrapper');
+
+        let copiedTimeout = null;
+
+        copyWrapper.addEventListener('click', ev => {
+            const highlightDom = ev.target.parentElement;
+            const code = highlightDom.querySelector('code');
+
+            let copiedCode = '';
+
+            (function traverseChildNodes(node) {
+                const childNodes = node.childNodes;
+                childNodes.forEach(child => {
+                    switch (child.nodeName) {
+                        case '#text': // 文本节点
+                            copiedCode += child.nodeValue;
+                            break;
+                        case 'BR': // <br />
+                            copiedCode += '\n';
+                            break;
+                        default:
+                            traverseChildNodes(child);
+                    }
+                });
+            }(code));
+
+            navigator.clipboard.writeText(
+
+                /* 去掉最后的换行 */
+                copiedCode.slice(0, -1)
+            ).then(() => {
+                if (copiedTimeout) clearTimeout(copiedTimeout);
+
+                copyWrapper.classList.add('codeblock-copy-wrapper-copied');
+                copiedTimeout = setTimeout(() => {
+                    copyWrapper.classList.remove('codeblock-copy-wrapper-copied');
+                    copiedTimeout = null;
+                }, 1500);
+            });
+        });
+        codeBlock.appendChild(copyWrapper);
+    };
+
+    codeBlocks.forEach(addCopyButton);
+});

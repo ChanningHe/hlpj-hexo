@@ -1,2 +1,80 @@
-let searchData;function loadData(t){var e;searchData?searchkey(t):((e=new XMLHttpRequest).open("GET","/content.json",!0),e.onload=function(){var e;200<=this.status&&this.status<300?(e=JSON.parse(this.response||this.responseText),searchData=e instanceof Array?e:e.posts,searchkey(t)):console.error(statusText)},e.onerror=function(){console.error(statusText)},e.send())}function searchkey(e){e.forEach(r=>{searchData.forEach(e=>{var t={},a=new RegExp(r,"g");let s=!1;-1!==e.title.search(a)&&(t.title=e.title.replace(a,`<span class="keyword">${r}</span>`),s=!0);var n=e.text.search(a);-1!==n&&(t.text=`…${e.text.substring(n,n+18)}…`,t.text=t.text.replace(a,`<span class="keyword">${r}</span>`),s=!0),s&&(t.title=t.title||e.title,t.text=t.text||e.text,t.href="/"+e.path,render(t))})})}function render(e){var t=document.createElement("div");t.className="search-result",t.innerHTML=`<a href=${e.href}><h3>${e.title}</h3>
-    <span class="content">${e.text}<br>　</span></a>`,document.getElementsByClassName("search-body")[0].appendChild(t)}let key=decodeURI(location.search.split("?q=")[1]);function sclose(){document.getElementById("nexmoe-search-space").style.display="none"}function sinput(){document.getElementsByClassName("search-body")[0].innerHTML="",loadData(format(document.getElementsByClassName("search-input")[0].value))}function format(e){return e.replace(/[ ]/g,"").split(" ")}void 0!==key&&"undefined"!==key&&(loadData(format(document.getElementsByClassName("search-input")[0].value=key)),document.getElementById("nexmoe-search-space").style.display="flex");
+// 参考 https://chaooo.github.io/article/20161109.html
+let searchData;
+function loadData(arg) {
+    if (!searchData) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/content.json', true);
+        xhr.onload = function() {
+            if (this.status >= 200 && this.status < 300) {
+                const res = JSON.parse(this.response || this.responseText);
+                searchData = res instanceof Array ? res : res.posts;
+                searchkey(arg);
+            } else {
+                console.error(statusText);
+            }
+        };
+        xhr.onerror = function() {
+            console.error(statusText);
+        };
+        xhr.send();
+    } else {
+        searchkey(arg);
+    }
+}
+
+function searchkey(keyword) {
+    keyword.forEach(word => {
+        searchData.forEach(post => {
+            const rend = {};
+            const reg = new RegExp(word, 'g');
+            let flag = false;
+            if (post.title.search(reg) !== -1) {
+                rend.title = post.title.replace(reg, `<span class="keyword">${word}</span>`);
+                flag = true;
+            }
+            const textpos = post.text.search(reg);
+            if (textpos !== -1) {
+                rend.text = `…${post.text.substring(textpos, textpos + 18)}…`;
+                rend.text = rend.text.replace(reg, `<span class="keyword">${word}</span>`);
+                flag = true;
+            }
+            if (flag) {
+                rend.title = !rend.title ? post.title : rend.title;
+                rend.text = !rend.text ? post.text : rend.text;
+                rend.href = `/${post.path}`;
+                render(rend);
+            }
+        });
+    });
+}
+
+function render(data) {
+    const ele = document.createElement('div');
+    ele.className = 'search-result';
+    ele.innerHTML = `<a href=${data.href}><h3>${data.title}</h3>
+    <span class="content">${data.text}<br>　</span></a>`;
+    document.getElementsByClassName('search-body')[0].appendChild(ele);
+}
+
+// 主程序
+const key = decodeURI(location.search.split('?q=')[1]);
+if (key !== undefined && key !== 'undefined') {
+    document.getElementsByClassName('search-input')[0].value = key;
+    loadData(format(key));
+    document.getElementById('nexmoe-search-space').style.display = 'flex';
+}
+
+// 事件
+function sclose() {
+    document.getElementById('nexmoe-search-space').style.display = 'none';
+}
+
+function sinput() {
+    document.getElementsByClassName('search-body')[0].innerHTML = '';
+    loadData(format(document.getElementsByClassName('search-input')[0].value));
+}
+
+// 搜索词格式化
+function format(word) {
+    return word.replace(/[ ]/g, '').split(' ');
+}
